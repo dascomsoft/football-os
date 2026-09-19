@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
-const env = require('../config/env');
-const User = require('../models/User.model');
-const Academy = require('../models/Academy.model');
-const { hashPassword } = require('../services/password.service');
+const env = require('../../config/env');
+const User = require('../../models/User.model');
+const Academy = require('../../models/Academy.model');
+const { hashPassword } = require('../../services/password.service');
 
 (async () => {
   const email = process.argv[2] || 'pending1@demo.local';

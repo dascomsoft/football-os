@@ -104,6 +104,14 @@ const coachSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+coachSchema.set('toJSON', {
+  versionKey: false,
+  transform: (doc, ret) => {
+    delete ret.__v;
+    return ret;
+  },
+});
+
 const Coach = mongoose.model('Coach', coachSchema);
 
 module.exports = Coach;

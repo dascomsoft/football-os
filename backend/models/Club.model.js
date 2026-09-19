@@ -64,6 +64,14 @@ const clubSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+clubSchema.set('toJSON', {
+  versionKey: false,
+  transform: (doc, ret) => {
+    delete ret.__v;
+    return ret;
+  },
+});
+
 const Club = mongoose.model('Club', clubSchema);
 
 module.exports = Club;

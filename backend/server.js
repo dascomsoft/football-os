@@ -39,6 +39,7 @@ app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/admin', require('./routes/admin.routes'));
 app.use('/api/players', require('./routes/player.routes'));
 app.use('/api/academies', require('./routes/academy.routes'));
+app.use('/api/coaches', require('./routes/coach.routes'));
 
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });

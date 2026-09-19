@@ -59,6 +59,14 @@ const academySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+academySchema.set('toJSON', {
+  versionKey: false,
+  transform: (doc, ret) => {
+    delete ret.__v;
+    return ret;
+  },
+});
+
 const Academy = mongoose.model('Academy', academySchema);
 
 module.exports = Academy;

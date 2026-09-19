@@ -1,6 +1,6 @@
 ﻿const mongoose = require('mongoose');
-const env = require('../config/env');
-const User = require('../models/User.model');
+const env = require('../../config/env');
+const User = require('../../models/User.model');
 
 (async () => {
   await mongoose.connect(env.mongoUri);

@@ -2,30 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Users, Shield, LogOut } from 'lucide-react';
+import {
+  LayoutDashboard,
+  Users,
+  Shield,
+  LogOut,
+  UserRound,
+} from 'lucide-react';
 import useAuth from '@/hooks/useAuth';
-
-// const NAV_BY_ROLE = {
-//   ADMIN: [
-//     { href: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
-//     { href: '/dashboard/admin/profiles', label: 'Profils en attente', icon: Shield },
-//   ],
-//   ACADEMY: [
-//     { href: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
-//   ],
-//   CLUB: [
-//     { href: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
-//   ],
-//   COACH: [
-//     { href: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
-//   ],
-//   PLAYER: [
-//     { href: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
-//   ],
-// };
-
-
-
 
 const NAV_BY_ROLE = {
   ADMIN: [
@@ -41,15 +25,12 @@ const NAV_BY_ROLE = {
   ],
   COACH: [
     { href: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
+    { href: '/dashboard/coach/profile', label: 'Mon profil', icon: UserRound },
   ],
   PLAYER: [
     { href: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
   ],
 };
-
-
-
-
 
 export default function Sidebar() {
   const pathname = usePathname();
