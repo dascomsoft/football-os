@@ -12,6 +12,14 @@ const ALLOWED_TRANSITIONS = {
 
 const REASON_REQUIRED = ['REJECTED', 'REQUESTED_INFO'];
 
+const ALLOWED_TYPES_BY_ROLE = {
+  ACADEMY: ['PLAYER'],
+  CLUB: ['PLAYER', 'COACH'],
+  COACH: ['COACH'],
+};
+
+const PUBLIC_VISIBILITIES = ['NETWORK', 'PROFESSIONAL'];
+
 async function generateReference(type) {
   const base = await Opportunity.countDocuments({ type });
   let n = base + 1;
@@ -30,9 +38,13 @@ async function generateReference(type) {
 
 function buildCriteriaFromRequest(request) {
   if (request.type === 'PLAYER') {
-    return request.playerCriteria ? request.playerCriteria.toObject?.() || request.playerCriteria : {};
+    return request.playerCriteria
+      ? request.playerCriteria.toObject?.() || request.playerCriteria
+      : {};
   }
-  return request.coachCriteria ? request.coachCriteria.toObject?.() || request.coachCriteria : {};
+  return request.coachCriteria
+    ? request.coachCriteria.toObject?.() || request.coachCriteria
+    : {};
 }
 
 function inferCategory(request) {
@@ -150,6 +162,49 @@ async function requestInfoRequest(requestId, adminUser, reason) {
   return request;
 }
 
+async function listPublicOpportunities(user, filters = {}) {
+  const allowedTypes = ALLOWED_TYPES_BY_ROLE[user.role];
+  if (!allowedTypes) {
+    throw ApiError.forbidden('Role not allowed to browse opportunities');
+  }
+
+  const query = {
+    status: 'ACTIVE',
+    visibility: { $in: PUBLIC_VISIBILITIES },
+    type: { $in: allowedTypes },
+  };
+
+  if (filters.type && allowedTypes.includes(filters.type)) {
+    query.type = filters.type;
+  }
+  if (filters.country) query.country = filters.country;
+  if (filters.level) query.level = filters.level;
+
+  return Opportunity.find(query).sort({ createdAt: -1 }).limit(500);
+}
+
+async function getPublicOpportunity(user, opportunityId) {
+  const allowedTypes = ALLOWED_TYPES_BY_ROLE[user.role];
+  if (!allowedTypes) {
+    throw ApiError.forbidden('Role not allowed to browse opportunities');
+  }
+
+  const opp = await Opportunity.findById(opportunityId);
+  if (!opp) {
+    throw ApiError.notFound('Opportunity not found');
+  }
+  if (opp.status !== 'ACTIVE') {
+    throw ApiError.notFound('Opportunity not found');
+  }
+  if (!PUBLIC_VISIBILITIES.includes(opp.visibility)) {
+    throw ApiError.notFound('Opportunity not found');
+  }
+  if (!allowedTypes.includes(opp.type)) {
+    throw ApiError.forbidden('Role not allowed to view this opportunity type');
+  }
+  return opp;
+}
+
 module.exports = {
   listRequestsForAdmin,
   getRequestForAdmin,
@@ -157,4 +212,6 @@ module.exports = {
   rejectRequest,
   requestInfoRequest,
   generateReference,
+  listPublicOpportunities,
+  getPublicOpportunity,
 };

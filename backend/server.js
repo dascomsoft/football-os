@@ -41,6 +41,7 @@ app.use('/api/players', require('./routes/player.routes'));
 app.use('/api/academies', require('./routes/academy.routes'));
 app.use('/api/coaches', require('./routes/coach.routes'));
 app.use('/api/recruitment-requests', require('./routes/recruitment-request.routes'));
+app.use('/api/opportunities', require('./routes/opportunity.routes'));
 
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
