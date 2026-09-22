@@ -52,10 +52,33 @@ async function requestInfo(req, res) {
   res.status(200).json({ request: request.toJSON() });
 }
 
+
+
+
+
+async function listOpportunities(req, res) {
+  const filters = {
+    status: req.query.status,
+    type: req.query.type,
+    visibility: req.query.visibility,
+  };
+  const items = await opportunityService.listAllOpportunitiesForAdmin(filters);
+  res.status(200).json({
+    items: items.map((o) => o.toAdminJSON()),
+    total: items.length,
+  });
+}
+
+
+
+
+
+
 module.exports = {
   listRequests,
   getRequest,
   approveRequest,
   rejectRequest,
   requestInfo,
+  listOpportunities,
 };

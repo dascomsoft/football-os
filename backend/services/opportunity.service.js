@@ -205,6 +205,26 @@ async function getPublicOpportunity(user, opportunityId) {
   return opp;
 }
 
+
+
+
+async function listAllOpportunitiesForAdmin(filters = {}) {
+  const query = {};
+  if (filters.status) query.status = filters.status;
+  if (filters.type) query.type = filters.type;
+  if (filters.visibility) query.visibility = filters.visibility;
+
+  return Opportunity.find(query).sort({ createdAt: -1 }).limit(1000);
+}
+
+
+
+
+
+
+
+
+
 module.exports = {
   listRequestsForAdmin,
   getRequestForAdmin,
@@ -214,4 +234,5 @@ module.exports = {
   generateReference,
   listPublicOpportunities,
   getPublicOpportunity,
+  listAllOpportunitiesForAdmin,
 };

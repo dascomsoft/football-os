@@ -28,5 +28,6 @@ router.get('/requests/:id', requestIdValidator, validate, adminRequestController
 router.post('/requests/:id/approve', approveValidator, validate, adminRequestController.approveRequest);
 router.post('/requests/:id/reject', rejectValidator, validate, adminRequestController.rejectRequest);
 router.post('/requests/:id/request-info', requestInfoValidator, validate, adminRequestController.requestInfo);
+router.get('/opportunities', adminRequestController.listOpportunities);
 
 module.exports = router;

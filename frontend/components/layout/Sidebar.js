@@ -8,29 +8,75 @@ import {
   Shield,
   LogOut,
   UserRound,
+  FileText,
+  Target,
 } from 'lucide-react';
 import useAuth from '@/hooks/useAuth';
+
+// const NAV_BY_ROLE = {
+//   ADMIN: [
+//     { href: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
+//     { href: '/dashboard/admin/profiles', label: 'Profils en attente', icon: Shield },
+//     { href: '/dashboard/admin/requests', label: 'Demandes', icon: FileText },
+//     { href: '/dashboard/admin/opportunities', label: 'Opportunites', icon: Target },
+//   ],
+//   ACADEMY: [
+//     { href: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
+//     { href: '/dashboard/academy/players', label: 'Joueurs', icon: Users },
+//   ],
+//   CLUB: [
+//     { href: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
+//   ],
+//   COACH: [
+//     { href: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
+//     { href: '/dashboard/coach/profile', label: 'Mon profil', icon: UserRound },
+//   ],
+//   PLAYER: [
+//     { href: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
+//   ],
+// };
+
+
+
+
+
 
 const NAV_BY_ROLE = {
   ADMIN: [
     { href: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
     { href: '/dashboard/admin/profiles', label: 'Profils en attente', icon: Shield },
+    { href: '/dashboard/admin/requests', label: 'Demandes', icon: FileText },
+    { href: '/dashboard/admin/opportunities', label: 'Opportunites', icon: Target },
   ],
   ACADEMY: [
     { href: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
     { href: '/dashboard/academy/players', label: 'Joueurs', icon: Users },
+    { href: '/dashboard/opportunities', label: 'Opportunites', icon: Target },
   ],
   CLUB: [
     { href: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
+    { href: '/dashboard/club/requests', label: 'Mes demandes', icon: FileText },
+    { href: '/dashboard/opportunities', label: 'Opportunites', icon: Target },
   ],
   COACH: [
     { href: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
     { href: '/dashboard/coach/profile', label: 'Mon profil', icon: UserRound },
+    { href: '/dashboard/coach/requests', label: 'Ma recherche', icon: FileText },
+    { href: '/dashboard/opportunities', label: 'Opportunites', icon: Target },
   ],
   PLAYER: [
     { href: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
   ],
 };
+
+
+
+
+
+
+
+
+
 
 export default function Sidebar() {
   const pathname = usePathname();
