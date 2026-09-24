@@ -42,26 +42,13 @@ app.use('/api/academies', require('./routes/academy.routes'));
 app.use('/api/coaches', require('./routes/coach.routes'));
 app.use('/api/recruitment-requests', require('./routes/recruitment-request.routes'));
 app.use('/api/opportunities', require('./routes/opportunity.routes'));
+app.use('/api/admin/proposals', require('./routes/admin-proposal.routes'));
+app.use('/api/club/proposals', require('./routes/club-proposal.routes'));
 
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
 
-// eslint-disable-next-line no-unused-vars
-// app.use((err, req, res, next) => {
-//   const status = err.status || 500;
-//   const payload = { message: err.message || 'Internal server error' };
-
-//   if (env.isDevelopment && err.stack) {
-//     payload.stack = err.stack;
-//   }
-
-//   if (status >= 500) {
-//     console.error('[error]', err);
-//   }
-
-//   res.status(status).json(payload);
-// });
 
 
 
