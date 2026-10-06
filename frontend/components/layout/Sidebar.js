@@ -10,6 +10,8 @@ import {
   UserRound,
   FileText,
   Target,
+  Send,
+  Plus
 } from 'lucide-react';
 import useAuth from '@/hooks/useAuth';
 
@@ -47,6 +49,8 @@ const NAV_BY_ROLE = {
     { href: '/dashboard/admin/profiles', label: 'Profils en attente', icon: Shield },
     { href: '/dashboard/admin/requests', label: 'Demandes', icon: FileText },
     { href: '/dashboard/admin/opportunities', label: 'Opportunites', icon: Target },
+    { href: '/dashboard/admin/proposals', label: 'Propositions', icon: Send },
+    { href: '/dashboard/admin/create', label: 'Creation directe', icon: Plus },
   ],
   ACADEMY: [
     { href: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
