@@ -32,6 +32,11 @@ async function closeProposal(id, payload) {
   return data;
 }
 
+async function markOutcome(id, payload) {
+  const { data } = await api.post(`/admin/proposals/${id}/outcome`, payload);
+  return data;
+}
+
 // --- Cote CLUB ---
 async function listClubProposals(filters = {}) {
   const params = {};
@@ -67,6 +72,7 @@ const proposalService = {
   createProposal,
   sendProposal,
   closeProposal,
+  markOutcome,
   listClubProposals,
   getClubProposal,
   markViewed,

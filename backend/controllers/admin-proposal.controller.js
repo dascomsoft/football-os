@@ -45,10 +45,21 @@ async function closeProposal(req, res) {
   res.status(200).json(view);
 }
 
+async function markOutcome(req, res) {
+  const proposal = await proposalService.markOutcome(
+    req.user,
+    req.params.id,
+    req.body
+  );
+  const view = await proposalService.buildAdminProposalView(proposal);
+  res.status(200).json(view);
+}
+
 module.exports = {
   createProposal,
   listProposals,
   getProposal,
   sendProposal,
   closeProposal,
+  markOutcome,
 };

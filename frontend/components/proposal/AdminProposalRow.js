@@ -9,6 +9,8 @@ const STATUS_LABELS = {
   VIEWED: 'Vue',
   INTERESTED: 'Interesse',
   DECLINED: 'Refusee',
+  PLACED: 'Place',
+  FAILED: 'Echec',
   CLOSED: 'Fermee',
 };
 
@@ -23,7 +25,8 @@ function formatDate(value) {
 
 export default function AdminProposalRow({ proposal, onAction, busy }) {
   const canSend = proposal.status === 'DRAFT';
-  const canClose = ['DRAFT', 'SENT', 'VIEWED', 'INTERESTED', 'DECLINED'].includes(
+  const canMarkOutcome = proposal.status === 'INTERESTED';
+  const canClose = ['DRAFT', 'SENT', 'VIEWED', 'DECLINED'].includes(
     proposal.status
   );
 
@@ -45,17 +48,23 @@ export default function AdminProposalRow({ proposal, onAction, busy }) {
 
         <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-content-secondary">
           <span>Envoyee le : {formatDate(proposal.sentAt)}</span>
-          {proposal.viewedAt ? (
-            <span>Vue le : {formatDate(proposal.viewedAt)}</span>
-          ) : null}
           {proposal.respondedAt ? (
             <span>Reponse le : {formatDate(proposal.respondedAt)}</span>
+          ) : null}
+          {proposal.outcomeDate ? (
+            <span>Resultat le : {formatDate(proposal.outcomeDate)}</span>
           ) : null}
         </div>
 
         {proposal.clubResponse ? (
           <p className="mt-2 text-xs text-content-secondary">
             Reponse du club : {proposal.clubResponse}
+          </p>
+        ) : null}
+
+        {proposal.outcomeNotes ? (
+          <p className="mt-2 text-xs text-content-secondary">
+            Resultat : {proposal.outcomeNotes}
           </p>
         ) : null}
 
@@ -77,10 +86,30 @@ export default function AdminProposalRow({ proposal, onAction, busy }) {
             Envoyer
           </Button>
         ) : null}
+        {canMarkOutcome ? (
+          <>
+            <Button
+              size="sm"
+              variant="primary"
+              disabled={busy}
+              onClick={() => onAction(proposal, 'PLACED')}
+            >
+              Marquer place
+            </Button>
+            <Button
+              size="sm"
+              variant="danger"
+              disabled={busy}
+              onClick={() => onAction(proposal, 'FAILED')}
+            >
+              Marquer echec
+            </Button>
+          </>
+        ) : null}
         {canClose ? (
           <Button
             size="sm"
-            variant="danger"
+            variant="secondary"
             disabled={busy}
             onClick={() => onAction(proposal, 'CLOSE')}
           >

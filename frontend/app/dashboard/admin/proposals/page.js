@@ -17,9 +17,18 @@ const STATUS_FILTERS = [
   { key: 'SENT', label: 'Envoyees' },
   { key: 'VIEWED', label: 'Vues' },
   { key: 'INTERESTED', label: 'Interesse' },
+  { key: 'PLACED', label: 'Places' },
+  { key: 'FAILED', label: 'Echecs' },
   { key: 'DECLINED', label: 'Refusees' },
   { key: 'CLOSED', label: 'Fermees' },
 ];
+
+const ACTION_LABELS = {
+  SEND: 'Envoyer la proposition',
+  CLOSE: 'Fermer la proposition',
+  PLACED: 'Marquer comme place',
+  FAILED: 'Marquer comme echec',
+};
 
 export default function AdminProposalsPage() {
   const { user } = useAuth();
@@ -32,6 +41,7 @@ export default function AdminProposalsPage() {
   const [busy, setBusy] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
   const [reason, setReason] = useState('');
+  const [outcomeNotes, setOutcomeNotes] = useState('');
   const [actionError, setActionError] = useState('');
 
   const load = useCallback(async () => {
@@ -54,9 +64,10 @@ export default function AdminProposalsPage() {
     load();
   }, [load]);
 
-  function openAction(proposal, action) {
-    setPendingAction({ proposal, action });
+  function openAction(view, action) {
+    setPendingAction({ view, action });
     setReason('');
+    setOutcomeNotes('');
     setActionError('');
   }
 
@@ -64,34 +75,47 @@ export default function AdminProposalsPage() {
     if (busy) return;
     setPendingAction(null);
     setReason('');
+    setOutcomeNotes('');
     setActionError('');
   }
 
   async function confirmAction() {
     if (!pendingAction) return;
 
-    const { proposal, action } = pendingAction;
+    const { view, action } = pendingAction;
+    const proposalId = view.proposal._id;
 
     setBusy(true);
     setActionError('');
 
     try {
       if (action === 'SEND') {
-        await proposalService.sendProposal(proposal.proposal._id);
+        await proposalService.sendProposal(proposalId);
       } else if (action === 'CLOSE') {
         if (!reason.trim()) {
           setActionError('Un motif est requis pour fermer.');
           setBusy(false);
           return;
         }
-        await proposalService.closeProposal(proposal.proposal._id, {
+        await proposalService.closeProposal(proposalId, {
           reason: reason.trim(),
         });
+      } else if (action === 'PLACED' || action === 'FAILED') {
+        await proposalService.markOutcome(proposalId, {
+          status: action,
+          outcome: action,
+          outcomeNotes: outcomeNotes.trim() || undefined,
+        });
       }
+
       setPendingAction(null);
       await load();
     } catch (err) {
-      setActionError(err.response?.data?.message || 'Action impossible.');
+      setActionError(
+        err.response?.data?.message ||
+          err.response?.data?.details?.[0]?.message ||
+          'Action impossible.'
+      );
     } finally {
       setBusy(false);
     }
@@ -106,14 +130,16 @@ export default function AdminProposalsPage() {
     );
   }
 
-  const requiresReason =
-    pendingAction && pendingAction.action === 'CLOSE';
+  const requiresReason = pendingAction && pendingAction.action === 'CLOSE';
+  const requiresOutcomeNotes =
+    pendingAction &&
+    (pendingAction.action === 'PLACED' || pendingAction.action === 'FAILED');
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Propositions"
-        subtitle="Presentez des candidats aux clubs, suivez leurs reponses."
+        subtitle="Presentez des candidats aux clubs, suivez leurs reponses et enregistrez les placements."
       />
 
       <div className="flex flex-wrap gap-2">
@@ -143,9 +169,9 @@ export default function AdminProposalsPage() {
           {items.map((view) => (
             <AdminProposalRow
               key={view.proposal._id}
-              proposal={view}
+              proposal={view.proposal}
               busy={busy}
-              onAction={openAction}
+              onAction={(p, action) => openAction(view, action)}
             />
           ))}
         </div>
@@ -163,13 +189,11 @@ export default function AdminProposalsPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="text-base font-semibold text-content-primary">
-              {pendingAction.action === 'SEND'
-                ? 'Envoyer la proposition'
-                : 'Fermer la proposition'}
+              {ACTION_LABELS[pendingAction.action]}
             </h2>
 
             <p className="mt-2 text-sm text-content-secondary">
-              {pendingAction.proposal.proposal.reference}
+              {pendingAction.view.proposal.reference}
             </p>
 
             {requiresReason ? (
@@ -185,11 +209,25 @@ export default function AdminProposalsPage() {
                   placeholder="Raison de la fermeture."
                 />
               </div>
-            ) : (
+            ) : null}
+
+            {requiresOutcomeNotes ? (
+              <div className="mt-4">
+                <Textarea
+                  label="Notes (optionnel)"
+                  rows={3}
+                  value={outcomeNotes}
+                  onChange={(e) => setOutcomeNotes(e.target.value)}
+                  placeholder="Ex : Signe le 15 janvier, contrat 3 ans."
+                />
+              </div>
+            ) : null}
+
+            {pendingAction.action === 'SEND' ? (
               <p className="mt-4 text-sm text-content-secondary">
                 La proposition sera visible par le club destinataire.
               </p>
-            )}
+            ) : null}
 
             {actionError ? (
               <p className="mt-3 text-sm text-state-danger">{actionError}</p>
@@ -201,7 +239,10 @@ export default function AdminProposalsPage() {
               </Button>
               <Button
                 variant={
-                  pendingAction.action === 'CLOSE' ? 'danger' : 'primary'
+                  pendingAction.action === 'FAILED' ||
+                  pendingAction.action === 'CLOSE'
+                    ? 'danger'
+                    : 'primary'
                 }
                 onClick={confirmAction}
                 loading={busy}

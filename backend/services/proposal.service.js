@@ -14,8 +14,10 @@ const ALLOWED_TRANSITIONS = {
   DRAFT: ['SENT', 'CLOSED'],
   SENT: ['VIEWED', 'INTERESTED', 'DECLINED', 'CLOSED'],
   VIEWED: ['INTERESTED', 'DECLINED', 'CLOSED'],
-  INTERESTED: ['CLOSED'],
+  INTERESTED: ['PLACED', 'FAILED', 'CLOSED'],
   DECLINED: ['CLOSED'],
+  PLACED: [],
+  FAILED: [],
   CLOSED: [],
 };
 
@@ -158,6 +160,47 @@ async function closeProposal(adminUser, proposalId, reason) {
   proposal.status = 'CLOSED';
   proposal.statusReason = reason.trim();
   await proposal.save();
+  return proposal;
+}
+
+async function markOutcome(adminUser, proposalId, payload) {
+  const { status, outcome, outcomeDate, outcomeNotes } = payload;
+
+  const proposal = await Proposal.findById(proposalId);
+  if (!proposal) throw ApiError.notFound('Proposal not found');
+
+  const allowed = ALLOWED_TRANSITIONS[proposal.status] || [];
+  if (!allowed.includes(status)) {
+    throw ApiError.badRequest(
+      `Cannot transition from ${proposal.status} to ${status}`
+    );
+  }
+
+  if (!['PLACED', 'FAILED'].includes(status)) {
+    throw ApiError.badRequest(`Invalid target status: ${status}`);
+  }
+
+  proposal.status = status;
+  proposal.outcome = outcome || (status === 'PLACED' ? 'PLACED' : 'FAILED');
+  proposal.outcomeDate = outcomeDate ? new Date(outcomeDate) : new Date();
+  proposal.outcomeNotes = outcomeNotes ? outcomeNotes.trim() : '';
+  await proposal.save();
+
+  try {
+    await notifyPrimaryAdmin({
+      type: 'PROPOSAL_RESPONSE',
+      title:
+        status === 'PLACED'
+          ? 'Placement enregistre'
+          : 'Proposition cloturee (echec)',
+      message: `Proposition ${proposal.reference} : ${proposal.outcomeNotes || status}`,
+      relatedId: proposal._id,
+      relatedType: 'PROPOSAL',
+    });
+  } catch (notifError) {
+    console.error('[proposal] Notification failed', notifError.message);
+  }
+
   return proposal;
 }
 
@@ -379,6 +422,7 @@ module.exports = {
   createProposal,
   sendProposal,
   closeProposal,
+  markOutcome,
   listProposalsForAdmin,
   getProposalForAdmin,
   listProposalsForClub,
