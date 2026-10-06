@@ -11,6 +11,8 @@ const VISIBILITIES = [
   'PROFESSIONAL',
 ];
 
+const SOURCES = ['REQUEST_APPROVED', 'ADMIN_MANUAL'];
+
 const ISSUING_TYPES = ['CLUB', 'COACH', 'ACADEMY'];
 
 const PLAYER_CATEGORIES = [
@@ -102,6 +104,11 @@ const opportunitySchema = new mongoose.Schema(
     },
 
     // Champs prives - jamais exposes aux roles non-admin
+    source: {
+      type: String,
+      enum: SOURCES,
+      default: 'REQUEST_APPROVED',
+    },
     sourceRequestId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'RecruitmentRequest',
@@ -134,8 +141,7 @@ opportunitySchema.set('toJSON', {
 });
 
 opportunitySchema.methods.toAdminJSON = function toAdminJSON() {
-  const obj = this.toJSON();
-  return obj;
+  return this.toJSON();
 };
 
 opportunitySchema.methods.toPublicJSON = function toPublicJSON() {
@@ -158,7 +164,6 @@ opportunitySchema.methods.toPublicJSON = function toPublicJSON() {
     updatedAt: obj.updatedAt,
   };
 
-  // La ville n'est exposee que si la visibilite est PROFESSIONAL
   if (!isNetwork && obj.city) {
     out.city = obj.city;
   }
@@ -172,6 +177,7 @@ module.exports = Opportunity;
 module.exports.TYPES = TYPES;
 module.exports.STATUSES = STATUSES;
 module.exports.VISIBILITIES = VISIBILITIES;
+module.exports.SOURCES = SOURCES;
 module.exports.ISSUING_TYPES = ISSUING_TYPES;
 module.exports.PLAYER_CATEGORIES = PLAYER_CATEGORIES;
 module.exports.COACH_CATEGORIES = COACH_CATEGORIES;

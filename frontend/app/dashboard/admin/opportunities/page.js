@@ -1,9 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import useAuth from '@/hooks/useAuth';
 import api from '@/lib/api';
 import PageHeader from '@/components/ui/PageHeader';
+import Button from '@/components/ui/Button';
 import LoadingState from '@/components/ui/LoadingState';
 import ErrorState from '@/components/ui/ErrorState';
 import EmptyState from '@/components/ui/EmptyState';
@@ -72,27 +74,37 @@ export default function AdminOpportunitiesPage() {
           {items.map((opp) => (
             <div
               key={opp._id}
-              className="flex flex-col gap-2 rounded-md border border-surface-border bg-surface-raised p-4"
+              className="flex flex-col gap-3 rounded-md border border-surface-border bg-surface-raised p-4 sm:flex-row sm:items-center sm:justify-between"
             >
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded-md bg-surface-overlay px-2 py-0.5 text-xs text-content-secondary">
-                  {opp.reference}
-                </span>
-                <span className="text-sm font-medium text-content-primary">
-                  {opp.title}
-                </span>
-                <StatusBadge status={opp.status} />
-                <span className="rounded-md bg-surface-overlay px-2 py-0.5 text-xs text-content-secondary">
-                  {opp.type}
-                </span>
-                <span className="rounded-md bg-surface-overlay px-2 py-0.5 text-xs text-content-secondary">
-                  Visibilite : {opp.visibility}
-                </span>
+              <div className="flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="rounded-md bg-surface-overlay px-2 py-0.5 text-xs text-content-secondary">
+                    {opp.reference}
+                  </span>
+                  <span className="text-sm font-medium text-content-primary">
+                    {opp.title}
+                  </span>
+                  <StatusBadge status={opp.status} />
+                  <span className="rounded-md bg-surface-overlay px-2 py-0.5 text-xs text-content-secondary">
+                    {opp.type}
+                  </span>
+                  <span className="rounded-md bg-surface-overlay px-2 py-0.5 text-xs text-content-secondary">
+                    Visibilite : {opp.visibility}
+                  </span>
+                </div>
+                <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-content-secondary">
+                  <span>{opp.country}</span>
+                  {opp.city ? <span>{opp.city}</span> : null}
+                  <span>{opp.level}</span>
+                </div>
               </div>
-              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-content-secondary">
-                <span>{opp.country}</span>
-                {opp.city ? <span>{opp.city}</span> : null}
-                <span>{opp.level}</span>
+
+              <div className="flex flex-wrap gap-2">
+                <Link href={`/dashboard/admin/opportunities/${opp._id}/propose`}>
+                  <Button size="sm" variant="primary">
+                    Proposer un candidat
+                  </Button>
+                </Link>
               </div>
             </div>
           ))}
