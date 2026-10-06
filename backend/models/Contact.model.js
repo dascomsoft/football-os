@@ -15,8 +15,6 @@ const ORGANIZATION_TYPES = ['CLUB', 'ACADEMY', 'COACH', ''];
 
 const RELATIONSHIP_STATUSES = ['PROSPECT', 'ACTIVE', 'INACTIVE', 'CLOSED'];
 
-const SOURCES = ['MANUAL', 'PLATFORM_SIGNUP', 'PLATFORM_IMPORT', 'EXTERNAL'];
-
 const socialLinksSchema = new mongoose.Schema(
   {
     linkedin: { type: String, trim: true, default: '' },
@@ -86,18 +84,6 @@ const contactSchema = new mongoose.Schema(
 
     privateNotes: { type: String, trim: true, default: '', maxlength: 10000 },
 
-    source: {
-      type: String,
-      enum: SOURCES,
-      default: 'MANUAL',
-      index: true,
-    },
-    autoCreated: {
-      type: Boolean,
-      default: false,
-      index: true,
-    },
-
     deletedAt: { type: Date, default: null, index: true },
   },
   { timestamps: true }
@@ -111,10 +97,8 @@ contactSchema.set('toJSON', {
   },
 });
 
-const Contact = mongoose.model('Contact', contactSchema);
-
+const Contact = mongoose.models.Contact || mongoose.model('Contact', contactSchema);
 module.exports = Contact;
 module.exports.TYPES = TYPES;
 module.exports.ORGANIZATION_TYPES = ORGANIZATION_TYPES;
 module.exports.RELATIONSHIP_STATUSES = RELATIONSHIP_STATUSES;
-module.exports.SOURCES = SOURCES;

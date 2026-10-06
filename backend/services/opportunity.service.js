@@ -1,6 +1,7 @@
 const Opportunity = require('../models/Opportunity.model');
 const RecruitmentRequest = require('../models/RecruitmentRequest.model');
 const ApiError = require('../utils/ApiError');
+const { createNotification } = require('./notification.service');
 
 const ALLOWED_TRANSITIONS = {
   PENDING: ['APPROVED', 'REJECTED', 'REQUESTED_INFO'],
@@ -103,6 +104,7 @@ async function approveRequest(requestId, adminUser, options = {}) {
     status: 'ACTIVE',
     visibility,
     sourceRequestId: request._id,
+    source: 'REQUEST_APPROVED',
     issuingOrganizationId: request.issuerOrganizationId,
     issuingOrganizationType: request.issuerRole,
     privateNotes: options.privateNotes || '',
@@ -114,6 +116,19 @@ async function approveRequest(requestId, adminUser, options = {}) {
   request.decidedAt = new Date();
   request.decidedBy = adminUser._id;
   await request.save();
+
+  try {
+    await createNotification({
+      recipientId: request.issuerUserId,
+      type: 'REQUEST_APPROVED',
+      title: 'Votre demande a ete approuvee',
+      message: `Votre demande "${request.title}" a ete publiee comme opportunite ${opportunity.reference}.`,
+      relatedId: request._id,
+      relatedType: 'RECRUITMENT_REQUEST',
+    });
+  } catch (notifError) {
+    console.error('[opportunity] Notification failed', notifError.message);
+  }
 
   return { request, opportunity };
 }
@@ -137,6 +152,19 @@ async function rejectRequest(requestId, adminUser, reason) {
   request.decidedBy = adminUser._id;
   await request.save();
 
+  try {
+    await createNotification({
+      recipientId: request.issuerUserId,
+      type: 'REQUEST_REJECTED',
+      title: 'Votre demande a ete rejetee',
+      message: `Motif : ${request.statusReason}`,
+      relatedId: request._id,
+      relatedType: 'RECRUITMENT_REQUEST',
+    });
+  } catch (notifError) {
+    console.error('[opportunity] Notification failed', notifError.message);
+  }
+
   return request;
 }
 
@@ -158,6 +186,19 @@ async function requestInfoRequest(requestId, adminUser, reason) {
   request.decidedAt = new Date();
   request.decidedBy = adminUser._id;
   await request.save();
+
+  try {
+    await createNotification({
+      recipientId: request.issuerUserId,
+      type: 'REQUEST_INFO',
+      title: 'Informations complementaires requises',
+      message: `Motif : ${request.statusReason}`,
+      relatedId: request._id,
+      relatedType: 'RECRUITMENT_REQUEST',
+    });
+  } catch (notifError) {
+    console.error('[opportunity] Notification failed', notifError.message);
+  }
 
   return request;
 }
@@ -205,9 +246,6 @@ async function getPublicOpportunity(user, opportunityId) {
   return opp;
 }
 
-
-
-
 async function listAllOpportunitiesForAdmin(filters = {}) {
   const query = {};
   if (filters.status) query.status = filters.status;
@@ -216,14 +254,6 @@ async function listAllOpportunitiesForAdmin(filters = {}) {
 
   return Opportunity.find(query).sort({ createdAt: -1 }).limit(1000);
 }
-
-
-
-
-
-
-
-
 
 module.exports = {
   listRequestsForAdmin,

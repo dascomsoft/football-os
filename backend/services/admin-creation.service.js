@@ -6,6 +6,7 @@ const Coach = require('../models/Coach.model');
 const Player = require('../models/Player.model');
 const Opportunity = require('../models/Opportunity.model');
 const { hashPassword } = require('./password.service');
+const { syncContactFromRegistration } = require('./contact-sync.service');
 const ApiError = require('../utils/ApiError');
 
 function generateTemporaryPassword() {
@@ -75,6 +76,22 @@ async function createClubAsAdmin(payload) {
       description: description || '',
       status: 'APPROVED',
     });
+
+    try {
+      await syncContactFromRegistration({
+        user,
+        profile: club,
+        profileType: 'CLUB',
+        accountPhone: phone,
+      });
+    } catch (syncError) {
+      console.error(
+        '[admin-creation] Contact sync failed for',
+        user.email,
+        syncError.message
+      );
+    }
+
     return { user, profile: club, temporaryPassword };
   } catch (error) {
     await User.findByIdAndDelete(user._id);
@@ -113,6 +130,22 @@ async function createAcademyAsAdmin(payload) {
       description: description || '',
       status: 'APPROVED',
     });
+
+    try {
+      await syncContactFromRegistration({
+        user,
+        profile: academy,
+        profileType: 'ACADEMY',
+        accountPhone: phone,
+      });
+    } catch (syncError) {
+      console.error(
+        '[admin-creation] Contact sync failed for',
+        user.email,
+        syncError.message
+      );
+    }
+
     return { user, profile: academy, temporaryPassword };
   } catch (error) {
     await User.findByIdAndDelete(user._id);
@@ -155,6 +188,22 @@ async function createCoachAsAdmin(payload) {
       licenses: Array.isArray(licenses) ? licenses : [],
       status: 'APPROVED',
     });
+
+    try {
+      await syncContactFromRegistration({
+        user,
+        profile: coach,
+        profileType: 'COACH',
+        accountPhone: phone,
+      });
+    } catch (syncError) {
+      console.error(
+        '[admin-creation] Contact sync failed for',
+        user.email,
+        syncError.message
+      );
+    }
+
     return { user, profile: coach, temporaryPassword };
   } catch (error) {
     await User.findByIdAndDelete(user._id);

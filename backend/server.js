@@ -44,6 +44,8 @@ app.use('/api/recruitment-requests', require('./routes/recruitment-request.route
 app.use('/api/opportunities', require('./routes/opportunity.routes'));
 app.use('/api/admin/proposals', require('./routes/admin-proposal.routes'));
 app.use('/api/club/proposals', require('./routes/club-proposal.routes'));
+app.use('/api/admin/contacts', require('./routes/contact.routes'));
+app.use('/api/notifications', require('./routes/notification.routes'));
 
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });

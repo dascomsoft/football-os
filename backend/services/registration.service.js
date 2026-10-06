@@ -4,6 +4,8 @@ const Club = require('../models/Club.model');
 const Coach = require('../models/Coach.model');
 const ApiError = require('../utils/ApiError');
 const { hashPassword } = require('./password.service');
+const { syncContactFromRegistration } = require('./contact-sync.service');
+const { notifyPrimaryAdmin } = require('./notification.service');
 
 const REGISTERABLE_ROLES = ['ACADEMY', 'CLUB', 'COACH'];
 
@@ -96,9 +98,41 @@ async function registerUser(payload) {
       throw ApiError.badRequest(`Unsupported role for profile creation: ${role}`);
     }
 
+    // Synchronise une fiche CRM pour l'ADMIN principal.
+    try {
+      await syncContactFromRegistration({
+        user,
+        profile: profileDoc,
+        profileType: role,
+        accountPhone: phone,
+      });
+    } catch (syncError) {
+      console.error(
+        '[registration] Contact sync failed for',
+        user.email,
+        syncError.message
+      );
+    }
+
+    // Notifie l'ADMIN principal qu'une inscription est en attente.
+    try {
+      await notifyPrimaryAdmin({
+        type: 'SIGNUP_RECEIVED',
+        title: `Nouvelle inscription : ${user.firstName} ${user.lastName}`,
+        message: `Un compte ${role} a ete cree avec l'email ${user.email}. En attente de validation.`,
+        relatedId: user._id,
+        relatedType: 'USER',
+      });
+    } catch (notifError) {
+      console.error(
+        '[registration] Notification failed for',
+        user.email,
+        notifError.message
+      );
+    }
+
     return { user, profile: profileDoc };
   } catch (error) {
-    // Rollback : on supprime le User pour eviter un orphelin
     try {
       await User.findByIdAndDelete(user._id);
     } catch (rollbackError) {

@@ -5,6 +5,10 @@ const Coach = require('../models/Coach.model');
 const Academy = require('../models/Academy.model');
 const Club = require('../models/Club.model');
 const ApiError = require('../utils/ApiError');
+const {
+  createNotification,
+  notifyPrimaryAdmin,
+} = require('./notification.service');
 
 const ALLOWED_TRANSITIONS = {
   DRAFT: ['SENT', 'CLOSED'],
@@ -14,8 +18,6 @@ const ALLOWED_TRANSITIONS = {
   DECLINED: ['CLOSED'],
   CLOSED: [],
 };
-
-const REASON_REQUIRED = ['DECLINED', 'CLOSED'];
 
 async function generateReference() {
   const count = await Proposal.countDocuments();
@@ -50,7 +52,14 @@ async function resolveCandidate(candidateType, candidateId) {
 }
 
 async function createProposal(adminUser, payload) {
-  const { opportunityId, clubId, candidateType, candidateId, message, sharedVideos } = payload;
+  const {
+    opportunityId,
+    clubId,
+    candidateType,
+    candidateId,
+    message,
+    sharedVideos,
+  } = payload;
 
   const opportunity = await Opportunity.findById(opportunityId);
   if (!opportunity) throw ApiError.notFound('Opportunity not found');
@@ -74,7 +83,9 @@ async function createProposal(adminUser, payload) {
 
   const existing = await Proposal.findOne({ opportunityId, candidateId });
   if (existing) {
-    throw ApiError.conflict('This candidate has already been proposed for this opportunity');
+    throw ApiError.conflict(
+      'This candidate has already been proposed for this opportunity'
+    );
   }
 
   const reference = await generateReference();
@@ -101,12 +112,31 @@ async function sendProposal(adminUser, proposalId) {
 
   const allowed = ALLOWED_TRANSITIONS[proposal.status] || [];
   if (!allowed.includes('SENT')) {
-    throw ApiError.badRequest(`Cannot transition from ${proposal.status} to SENT`);
+    throw ApiError.badRequest(
+      `Cannot transition from ${proposal.status} to SENT`
+    );
   }
 
   proposal.status = 'SENT';
   proposal.sentAt = new Date();
   await proposal.save();
+
+  try {
+    const club = await Club.findById(proposal.clubId);
+    if (club) {
+      await createNotification({
+        recipientId: club.userId,
+        type: 'PROPOSAL_RECEIVED',
+        title: 'Nouvelle proposition recue',
+        message: `L'administrateur vous a adresse une proposition ${proposal.reference}.`,
+        relatedId: proposal._id,
+        relatedType: 'PROPOSAL',
+      });
+    }
+  } catch (notifError) {
+    console.error('[proposal] Notification failed', notifError.message);
+  }
+
   return proposal;
 }
 
@@ -120,7 +150,9 @@ async function closeProposal(adminUser, proposalId, reason) {
 
   const allowed = ALLOWED_TRANSITIONS[proposal.status] || [];
   if (!allowed.includes('CLOSED')) {
-    throw ApiError.badRequest(`Cannot transition from ${proposal.status} to CLOSED`);
+    throw ApiError.badRequest(
+      `Cannot transition from ${proposal.status} to CLOSED`
+    );
   }
 
   proposal.status = 'CLOSED';
@@ -147,7 +179,8 @@ async function getProposalForAdmin(proposalId) {
 
 async function getProposalForClub(clubUser, proposalId) {
   const club = await Club.findOne({ userId: clubUser._id });
-  if (!club) throw ApiError.forbidden('No club profile attached to this account');
+  if (!club)
+    throw ApiError.forbidden('No club profile attached to this account');
 
   const proposal = await Proposal.findOne({
     _id: proposalId,
@@ -159,7 +192,8 @@ async function getProposalForClub(clubUser, proposalId) {
 
 async function listProposalsForClub(clubUser, filters = {}) {
   const club = await Club.findOne({ userId: clubUser._id });
-  if (!club) throw ApiError.forbidden('No club profile attached to this account');
+  if (!club)
+    throw ApiError.forbidden('No club profile attached to this account');
 
   const query = { clubId: club._id };
   if (filters.status) query.status = filters.status;
@@ -193,6 +227,19 @@ async function markInterested(clubUser, proposalId, response) {
   if (response) proposal.clubResponse = response.trim();
   proposal.respondedAt = new Date();
   await proposal.save();
+
+  try {
+    await notifyPrimaryAdmin({
+      type: 'PROPOSAL_RESPONSE',
+      title: 'Un club a manifeste son interet',
+      message: `Proposition ${proposal.reference} : le club a marque son interet.`,
+      relatedId: proposal._id,
+      relatedType: 'PROPOSAL',
+    });
+  } catch (notifError) {
+    console.error('[proposal] Notification failed', notifError.message);
+  }
+
   return proposal;
 }
 
@@ -214,10 +261,22 @@ async function markDeclined(clubUser, proposalId, reason) {
   proposal.statusReason = reason.trim();
   proposal.respondedAt = new Date();
   await proposal.save();
+
+  try {
+    await notifyPrimaryAdmin({
+      type: 'PROPOSAL_RESPONSE',
+      title: 'Un club a decline une proposition',
+      message: `Proposition ${proposal.reference} : ${proposal.statusReason}`,
+      relatedId: proposal._id,
+      relatedType: 'PROPOSAL',
+    });
+  } catch (notifError) {
+    console.error('[proposal] Notification failed', notifError.message);
+  }
+
   return proposal;
 }
 
-// Donnees sportives du candidat, sans aucune donnee privee
 async function buildCandidateView(proposal) {
   if (proposal.candidateType === 'PLAYER') {
     const player = await Player.findById(proposal.candidateId).lean();
@@ -273,7 +332,6 @@ async function buildCandidateView(proposal) {
   };
 }
 
-// Vues enrichies : proposal + candidate + opportunity (filtree)
 async function buildAdminProposalView(proposal) {
   const candidate = await buildCandidateView(proposal);
   const opportunity = await Opportunity.findById(proposal.opportunityId).lean();

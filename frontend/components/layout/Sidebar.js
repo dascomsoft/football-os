@@ -11,35 +11,10 @@ import {
   FileText,
   Target,
   Send,
-  Plus
+  Plus,
+  BookUser
 } from 'lucide-react';
 import useAuth from '@/hooks/useAuth';
-
-// const NAV_BY_ROLE = {
-//   ADMIN: [
-//     { href: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
-//     { href: '/dashboard/admin/profiles', label: 'Profils en attente', icon: Shield },
-//     { href: '/dashboard/admin/requests', label: 'Demandes', icon: FileText },
-//     { href: '/dashboard/admin/opportunities', label: 'Opportunites', icon: Target },
-//   ],
-//   ACADEMY: [
-//     { href: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
-//     { href: '/dashboard/academy/players', label: 'Joueurs', icon: Users },
-//   ],
-//   CLUB: [
-//     { href: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
-//   ],
-//   COACH: [
-//     { href: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
-//     { href: '/dashboard/coach/profile', label: 'Mon profil', icon: UserRound },
-//   ],
-//   PLAYER: [
-//     { href: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
-//   ],
-// };
-
-
-
 
 
 
@@ -51,6 +26,7 @@ const NAV_BY_ROLE = {
     { href: '/dashboard/admin/opportunities', label: 'Opportunites', icon: Target },
     { href: '/dashboard/admin/proposals', label: 'Propositions', icon: Send },
     { href: '/dashboard/admin/create', label: 'Creation directe', icon: Plus },
+    { href: '/dashboard/admin/crm', label: 'CRM prive', icon: BookUser },
   ],
   ACADEMY: [
     { href: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
